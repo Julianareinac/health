@@ -17,7 +17,13 @@ public class MonitoringService {
     @Autowired
     private MicroserviceRepository repository;
 
+    private final NotificationClient notificationClient;
+
     private RestTemplate restTemplate = new RestTemplate();
+
+    public MonitoringService(NotificationClient notificationClient) {
+        this.notificationClient = notificationClient;
+    }
 
     public Map<String, Object> checkHealthDetailed(String endpoint) {
         Map<String, Object> healthDetail = new HashMap<>();
@@ -85,18 +91,12 @@ public class MonitoringService {
     }
 
     public void notifyServiceDown(String destinatario, List<String> canales, String mensaje, String modo) {
-        String notificationUrl = "http://localhost:5000/notificaciones";
         Map<String, Object> notification = new HashMap<>();
         notification.put("destinatario", destinatario);
         notification.put("canales", canales);
         notification.put("mensaje", mensaje);
         notification.put("modo", modo);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(notification, headers);
-
-        restTemplate.postForEntity(notificationUrl, request, Void.class);
+        notificationClient.sendNotification(notification);
     }
 
     @Scheduled(fixedRate = 60000) // Verifica cada minuto

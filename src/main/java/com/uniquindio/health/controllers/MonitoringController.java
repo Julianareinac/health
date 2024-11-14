@@ -25,15 +25,28 @@ public class MonitoringController {
 
     // Ruta para obtener la salud de todos los microservicios
     @GetMapping("/health")
-    public Map<String, Map<String, Object>> getAllHealthStatus() {
-        return monitoringService.checkAllServicesHealth();
+    public ResponseEntity<?> getAllHealthStatus() {
+        Map<String, Map<String, Object>> healthStatus = monitoringService.checkAllServicesHealth();
+        for (Map.Entry<String, Map<String, Object>> entry : healthStatus.entrySet()) {
+            Object value = entry.getValue();
+
+            if (value instanceof Map) {
+                Map<?, ?> nestedMap = (Map<?, ?>) value;
+
+                if (nestedMap.containsKey("error")) {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(healthStatus);
+                }
+            }
+        }
+        return ResponseEntity.ok(healthStatus);
     }
 
     @GetMapping("/health/{name}")
     public ResponseEntity<?> getSpecificHealthStatus(@PathVariable String name) {
         Map<String, Object> healthStatus = monitoringService.checkSpecificServiceHealth(name);
 
-        // Verificamos si la respuesta incluye un error
+        // Verificamos si la respuesta incluye un
+
         if (healthStatus.containsKey("error")) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(healthStatus);
         }
