@@ -1,0 +1,129 @@
+openapi: 3.0.3
+info:
+  title: Microservice Monitoring API
+  description: API para registrar y monitorear el estado de salud de los microservicios.
+  version: 1.0.0
+paths:
+  /monitoring/register:
+    post:
+      summary: Registrar un nuevo microservicio
+      description: Registra un nuevo microservicio para ser monitoreado.
+      operationId: registerMicroservice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Microservice'
+            example:
+              name: "payment-service"
+              endpoint: "http://localhost:8081"
+              frequency: 10
+              emails: "admin@company.com"
+      responses:
+        '200':
+          description: Microservicio registrado exitosamente
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "Microservice registered successfully!"
+
+  /monitoring/health:
+    get:
+      summary: Obtener estado de salud de todos los microservicios
+      description: Devuelve el estado de salud de todos los microservicios registrados.
+      operationId: getAllHealthStatus
+      responses:
+        '200':
+          description: Estado de salud de todos los microservicios
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+                  additionalProperties: true
+              example:
+                payment-service:
+                  status: "healthy"
+                  version: "1.0.0"
+                  uptime: "12h"
+                user-service:
+                  status: "degraded"
+                  error: "Database connection error"
+                  version: "2.1.0"
+                  uptime: "8h"
+        '404':
+          description: No se encontraron microservicios saludables
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+                  additionalProperties: true
+              example:
+                payment-service:
+                  status: "healthy"
+                  version: "1.0.0"
+                  uptime: "12h"
+                user-service:
+                  status: "unhealthy"
+                  error: "Service timeout"
+                  version: "2.1.0"
+                  uptime: "3h"
+
+  /monitoring/health/{name}:
+    get:
+      summary: Obtener estado de salud de un microservicio específico
+      description: Devuelve el estado de salud de un microservicio específico.
+      operationId: getSpecificHealthStatus
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: Nombre del microservicio a consultar
+          schema:
+            type: string
+            example: "payment-service"
+      responses:
+        '200':
+          description: Estado de salud del microservicio específico
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+              example:
+                status: "healthy"
+                version: "1.0.0"
+                uptime: "12h"
+        '404':
+          description: Microservicio no encontrado o error en el estado de salud
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+              example:
+                error: "Service not found"
+                message: "Microservice 'payment-service' not found."
+
+components:
+  schemas:
+    Microservice:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "payment-service"
+        endpoint:
+          type: string
+          example: "http://localhost:8081"
+        frequency:
+          type: integer
+          example: 10
+        emails:
+          type: string
+          example: "admin@company.com"
